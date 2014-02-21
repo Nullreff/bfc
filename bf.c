@@ -99,5 +99,6 @@ int main()
     FOREACH(Instruction, inst, headInst)
     {
         print_instruction(*inst);
+        free(inst);
     }
 }
