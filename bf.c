@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FOREACH(type,item,list) for (type* item = list;item;item = item->next)
+#define CHECK_OOM(pointer) if (!pointer) { fprintf(stderr, "Out of memory!\n"); exit(EXIT_FAILURE); }
 
 typedef enum 
 {
@@ -17,11 +17,10 @@ typedef enum
 
 static const char *OP_NAMES[] = { "noop", "shift", "modify", "print", "read", "loop", "loop_end"};
 
-typedef struct instruction_
+typedef struct
 {
     BF_Operation op;
     int value;
-    struct instruction_* next;
 } Instruction;
 
 void print_instruction_indent(Instruction inst, int indentation)
@@ -37,68 +36,100 @@ void print_instruction(Instruction inst)
     }
 }
 
-Instruction get_instruction(char c)
+Instruction new_instruction(int c)
 {
+    Instruction inst = {BF_NOOP, 0};
+
     switch (c)
     {
         case '>':
-            return (Instruction){BF_SHIFT, 1};
+            inst.op = BF_SHIFT;
+            inst.value = 1;
+            break;
         case '<':
-            return (Instruction){BF_SHIFT, -1};
+            inst.op = BF_SHIFT;
+            inst.value = -1;
+            break;
         case '+':
-            return (Instruction){BF_MODIFY, 1};
+            inst.op = BF_MODIFY;
+            inst.value = 1;
+            break;
         case '-':
-            return (Instruction){BF_MODIFY, -1};
+            inst.op = BF_MODIFY;
+            inst.value = -1;
+            break;
         case '.':
-            return (Instruction){BF_PRINT, 1};
+            inst.op = BF_PRINT;
+            inst.value = 1;
+            break;
         case ',':
-            return (Instruction){BF_READ, 1};
+            inst.op = BF_READ;
+            inst.value = 1;
+            break;
         case '[':
-            return (Instruction){BF_LOOP};
+            inst.op = BF_LOOP;
+            break;
         case ']':
-            return (Instruction){BF_LOOP_END};
+            inst.op = BF_LOOP_END;
+            break;
         default:
-            return (Instruction){BF_NOOP};
+            inst.op = BF_NOOP;
+            break;
     }
+
+    return inst;
 }
 
 int main()
 {
     int c;
-    Instruction* currentInst = NULL;
-    Instruction* headInst = NULL;
+    int index = -1;
+    int size = 10;
+    Instruction* instructions = malloc(sizeof(Instruction) * size);
+    CHECK_OOM(instructions);
 
     // Read in instructions
     while ((c = getchar()) != EOF)
     {
-        Instruction* inst = malloc(sizeof(Instruction));
-        *inst = get_instruction(c);
+        Instruction newInst = new_instruction(c);
 
-        if (inst->op == BF_NOOP)
+        if (newInst.op == BF_NOOP)
         {
             continue;
         }
-
-        if (currentInst == NULL)
+        else if (index == -1)
         {
-            currentInst = inst;
-            headInst = currentInst;
+            instructions[0] = newInst;
+            index++;
         }
-        else if (inst->op != currentInst->op)
+        else if (newInst.op != instructions[index].op)
         {
-            currentInst->next = inst;
-            currentInst = inst;
+            index++;
+
+            // Reallocate array if we run out of room
+            if (index >= size)
+            {
+                Instruction* temp = realloc(instructions, sizeof(Instruction) * size * 2);
+                CHECK_OOM(temp);
+                size *= 2;
+                instructions = temp;
+            }
+
+            instructions[index] = newInst;
         }
         else
         {
-            currentInst->value += inst->value;
+            instructions[index].value += newInst.value;
         }
     }
 
+    int count = index + 1;
+
     printf("Instructions:\n");
-    FOREACH(Instruction, inst, headInst)
+    for (index = 0; index < count; index++)
     {
-        print_instruction(*inst);
-        free(inst);
+        print_instruction(instructions[index]);
     }
+
+    free(instructions);
 }
