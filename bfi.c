@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHECK_OOM(pointer) if (!pointer) { fprintf(stderr, "Out of memory!\n"); exit(EXIT_FAILURE); }
+#define FAIL_IF(test) if (test) { exit(EXIT_FAILURE); }
+
 int* data;
 int* start;
 char* code;
@@ -49,7 +50,6 @@ int run_code(int start)
 
             case ']':
                 return i;
-                break;
         }
 
         i++;
@@ -60,11 +60,14 @@ int run_code(int start)
 
 int main(int argc, char* argv[])
 {
-    int size = 30000;
+    FAIL_IF(argc != 2);
 
-    start = data = malloc(sizeof(int) * size);
-    CHECK_OOM(data);
     code = argv[1];
+    start = data = malloc(sizeof(int) * 30000);
+    FAIL_IF(!data);
+
     run_code(0);
+
     free(start);
+    return EXIT_SUCCESS;
 }
