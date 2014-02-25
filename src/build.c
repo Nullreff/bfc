@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "build.h"
+
 #define CHECK_OOM(pointer) if (!pointer) { fprintf(stderr, "Out of memory!\n"); exit(EXIT_FAILURE); }
 
-typedef enum 
+typedef enum
 {
     // Simple Operators
     BF_NOOP,
@@ -80,25 +82,18 @@ Instruction new_instruction(int c)
     return inst;
 }
 
-int main(int argc, char* argv[])
+void bf_build(char* program, long length)
 {
-    if (argc != 2)
-    {
-        printf("Usage: %s file.bf\n", argv[0]);
-        exit(1);
-    }
-
-    int c;
+    int i;
     int index = -1;
     int size = 10;
-    FILE* file = fopen (argv[1], "r");
     Instruction* instructions = malloc(sizeof(Instruction) * size);
     CHECK_OOM(instructions);
 
     // Read in instructions
-    while ((c = fgetc(file)) != EOF)
+    for (i = 0; i < length; i++)
     {
-        Instruction newInst = new_instruction(c);
+        Instruction newInst = new_instruction(program[i]);
 
         if (newInst.op == BF_NOOP)
         {

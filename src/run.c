@@ -1,20 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "run.h"
+
 #define FAIL_IF(test) if (test) { exit(EXIT_FAILURE); }
 
-int* data;
-int* start;
-char* code;
-
-int run_code(int start)
+int run_code(char* program, int start, int length, int* data)
 {
-    int i = start;
+    int i;
     int end;
 
-    while (code[i] != '\0')
+    for (i = start; i < length; i++)
     {
-        switch (code[i])
+        char value = program[i];
+        switch (value)
         {
             case '+':
                 ++*data;
@@ -43,7 +42,7 @@ int run_code(int start)
             case '[':
                 while (*data)
                 {
-                    end = run_code(i + 1);
+                    end = run_code(program, i + 1, length, data);
                 }
                 i = end;
                 break;
@@ -51,23 +50,17 @@ int run_code(int start)
             case ']':
                 return i;
         }
-
-        i++;
     }
 
     return i;
 }
 
-int main(int argc, char* argv[])
+void bf_run(char* program, long length)
 {
-    FAIL_IF(argc != 2);
-
-    code = argv[1];
-    start = data = malloc(sizeof(int) * 30000);
+    int* data = malloc(sizeof(int) * 30000);
     FAIL_IF(!data);
 
-    run_code(0);
+    run_code(program, 0, length, data);
 
-    free(start);
-    return EXIT_SUCCESS;
+    free(data);
 }
