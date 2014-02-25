@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "run.h"
-
-#define FAIL_IF(test) if (test) { exit(EXIT_FAILURE); }
+#include "common.h"
 
 int run_code(char* program, int start, int length, int* data)
 {
@@ -58,7 +56,7 @@ int run_code(char* program, int start, int length, int* data)
 void bf_run(char* program, long length)
 {
     int* data = malloc(sizeof(int) * 30000);
-    FAIL_IF(!data);
+    CHECK_OOM(data);
 
     run_code(program, 0, length, data);
 

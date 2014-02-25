@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "build.h"
 #include "run.h"
-
-#define CHECK_OOM(pointer) if (!pointer) { fprintf(stderr, "Out of memory!\n"); exit(EXIT_FAILURE); }
+#include "common.h"
 
 void print_help(char* name)
 {

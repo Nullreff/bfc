@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "build.h"
-
-#define CHECK_OOM(pointer) if (!pointer) { fprintf(stderr, "Out of memory!\n"); exit(EXIT_FAILURE); }
+#include "common.h"
 
 typedef enum
 {
