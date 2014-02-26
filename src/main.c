@@ -35,7 +35,7 @@ long get_file_contents(char* name, char** buffer)
 
 int main(int argc, char* argv[])
 {
-    void (*command)(char*, long);
+    void (*command)(char*, long, long);
     char* program = 0;
     long length = 0;
 
@@ -59,6 +59,6 @@ int main(int argc, char* argv[])
     }
 
     length = get_file_contents(argv[2], &program);
-    command(program, length);
+    command(program, length, 30000);
     free(program);
 }

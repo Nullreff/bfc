@@ -80,7 +80,7 @@ Instruction new_instruction(int c)
     return inst;
 }
 
-void bf_build(char* program, long length)
+void bf_build(char* program, long program_length, long data_length)
 {
     int i;
     int index = -1;
@@ -89,7 +89,7 @@ void bf_build(char* program, long length)
     CHECK_OOM(instructions);
 
     // Read in instructions
-    for (i = 0; i < length; i++)
+    for (i = 0; i < program_length; i++)
     {
         Instruction newInst = new_instruction(program[i]);
 

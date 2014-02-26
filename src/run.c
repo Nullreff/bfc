@@ -3,7 +3,8 @@
 #include "run.h"
 #include "common.h"
 
-#define DATA_VAL(val) (val).data[(val).index]
+#define DATA_VAL(val) val->data[val->index]
+#define DATA_EACH(val) for (;val->index < val->length; val->index++)
 
 typedef struct
 {
@@ -25,7 +26,9 @@ int run_to_loop_end(BF_Code* code)
 
     do
     {
-        switch (DATA_VAL(*code))
+        code->index++;
+
+        switch (DATA_VAL(code))
         {
             case '[':
                 loops++;
@@ -34,15 +37,12 @@ int run_to_loop_end(BF_Code* code)
                 loops--;
                 break;
         }
-
-        code->index++;
     }
     while (loops > 0);
 }
 
 void strip_comments(BF_Code* code)
 {
-    char* data = malloc(sizeof(char) * code->length);
     int i, j;
 
     for (i = j = 0; i < code->length; i++)
@@ -57,14 +57,16 @@ void strip_comments(BF_Code* code)
             case ',':
             case '[':
             case ']':
-                data[j] = code->data[i];
+                if (i != j)
+                {
+                    code->data[j] = code->data[i];
+                }
                 j++;
                 break;
         }
     }
 
-    free(code->data);
-    code->data = data;
+    realloc(code->data, j);
     code->length = j;
 }
 
@@ -72,7 +74,7 @@ void debug_info(BF_Code code, BF_State state)
 {
     int i;
 
-    printf(" ");
+    printf("\n---\n ");
     for (i = 0; i < code.length; i++)
     {
         printf("%c", code.data[i]);
@@ -85,23 +87,23 @@ void debug_info(BF_Code code, BF_State state)
         printf("%d", state.data[i]);
     }
     printf("\n%*s" "^\n", state.index + 1, " ");
+    printf("---\n");
 }
 
 void run_code(BF_Code* code, BF_State* state)
 {
-    int start = code->index;
-    int i, j, end;
+    int start;
 
-    for (; code->index < code->length; code->index++)
+    DATA_EACH(code)
     {
-        switch (DATA_VAL(*code))
+        switch (DATA_VAL(code))
         {
             case '+':
-                DATA_VAL(*state)++;
+                DATA_VAL(state)++;
                 break;
 
             case '-':
-                DATA_VAL(*state)--;
+                DATA_VAL(state)--;
                 break;
 
             case '>':
@@ -113,28 +115,32 @@ void run_code(BF_Code* code, BF_State* state)
                 break;
 
             case '.':
-                putchar(DATA_VAL(*state));
+                printf("%c", DATA_VAL(state));
                 break;
 
             case ',':
-                DATA_VAL(*state) = getchar();
+                DATA_VAL(state) = getchar();
                 break;
 
             case '[':
-                end = -1;
-
-                if (DATA_VAL(*state) == 0)
+                if (!DATA_VAL(state))
                 {
                     run_to_loop_end(code);
                     break;
                 }
 
-                do
+                start = ++code->index;
+                while(1)
                 {
                     run_code(code, state);
-                }
-                while (DATA_VAL(*state) != 0);
 
+                    if (!DATA_VAL(state))
+                    {
+                        break;
+                    }
+
+                    code->index = start;
+                }
                 break;
 
             case ']':
@@ -143,15 +149,22 @@ void run_code(BF_Code* code, BF_State* state)
     }
 }
 
-void bf_run(char* program, long length)
+void bf_run(char* program, long program_length, long data_length)
 {
-    int* data = malloc(sizeof(int) * 30000);
+    int* data = calloc(data_length, sizeof(int));
     CHECK_OOM(data);
+    BF_Code* code = malloc(sizeof(BF_Code));
+    CHECK_OOM(code);
+    BF_State* state = malloc(sizeof(BF_State));
+    CHECK_OOM(state);
 
-    BF_Code code = (BF_Code){0, 0, program};
-    BF_State state = (BF_State){0, 0, data};
+    *code = (BF_Code){0, program_length, program};
+    *state = (BF_State){0, data_length, data};
 
-    run_code(&code, &state);
+    strip_comments(code);
+    run_code(code, state);
 
-    free(data);
+    free(state->data);
+    free(code);
+    free(state);
 }
