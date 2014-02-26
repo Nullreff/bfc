@@ -57,6 +57,7 @@ void strip_comments(BF_Code* code)
             case ',':
             case '[':
             case ']':
+            case '#':
                 if (i != j)
                 {
                     code->data[j] = code->data[i];
@@ -145,6 +146,10 @@ void run_code(BF_Code* code, BF_State* state)
 
             case ']':
                 return;
+
+            case '#':
+                debug_info(*code, *state);
+                break;
         }
     }
 }
