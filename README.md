@@ -6,11 +6,9 @@ This is a [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) interpreter/compi
 Building
 --------
 
-You'll need [Git](http://git-scm.com/) and [CMake](http://www.cmake.org/).
+You'll need [CMake](http://www.cmake.org/).
 
 ```bash
-git clone git@github.com:Nullreff/bfc.git
-cd bfc/
 cmake src/
 make
 ```
