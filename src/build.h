@@ -1,3 +1,4 @@
 #pragma once
+#include "common.h"
 
-void bf_build(char* program, long program_length, long data_length);
+void bf_build(BF_Code code, BF_Options options);

@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "run.h"
 #include "common.h"
 
-#define DATA_VAL(val) val->data[val->index]
 #define DATA_EACH(val) for (;val->index < val->length; val->index++)
 
 typedef struct
@@ -12,13 +12,6 @@ typedef struct
     int length;
     int* data;
 } BF_State;
-
-typedef struct
-{
-    int index;
-    int length;
-    char* data;
-} BF_Code;
 
 int run_to_loop_end(BF_Code* code)
 {
@@ -67,7 +60,8 @@ void strip_comments(BF_Code* code)
         }
     }
 
-    realloc(code->data, j);
+    code->data = realloc(code->data, j);
+    CHECK_OOM(code->data);
     code->length = j;
 }
 
@@ -91,12 +85,17 @@ void debug_info(BF_Code code, BF_State state)
     printf("---\n");
 }
 
-void run_code(BF_Code* code, BF_State* state)
+void run_code(BF_Code* code, BF_State* state, int debug)
 {
     int start;
 
     DATA_EACH(code)
     {
+        if (debug)
+        {
+            debug_info(*code, *state);
+        }
+
         switch (DATA_VAL(code))
         {
             case '+':
@@ -133,7 +132,7 @@ void run_code(BF_Code* code, BF_State* state)
                 start = ++code->index;
                 while(1)
                 {
-                    run_code(code, state);
+                    run_code(code, state, debug);
 
                     if (!DATA_VAL(state))
                     {
@@ -154,22 +153,22 @@ void run_code(BF_Code* code, BF_State* state)
     }
 }
 
-void bf_run(char* program, long program_length, long data_length)
+void bf_run(BF_Code code, BF_Options options)
 {
-    int* data = calloc(data_length, sizeof(int));
+    int* data = calloc(options.data_length, sizeof(int));
     CHECK_OOM(data);
-    BF_Code* code = malloc(sizeof(BF_Code));
-    CHECK_OOM(code);
+    BF_Code* code_copy = malloc(sizeof(BF_Code));
+    CHECK_OOM(run_code);
     BF_State* state = malloc(sizeof(BF_State));
     CHECK_OOM(state);
 
-    *code = (BF_Code){0, program_length, program};
-    *state = (BF_State){0, data_length, data};
+    memcpy(code_copy, &code, sizeof(BF_Code));
+    *state = (BF_State){0, options.data_length, data};
 
-    strip_comments(code);
-    run_code(code, state);
+    strip_comments(code_copy);
+    run_code(code_copy, state, options.debug);
 
     free(state->data);
-    free(code);
+    free(code_copy);
     free(state);
 }

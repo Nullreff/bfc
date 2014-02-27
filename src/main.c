@@ -9,44 +9,48 @@ void print_help(char* name)
 {
     printf("Usage: %s <commmand> [args]\n", name);
     printf("Commands:\n");
-    printf("    run   <file> - Executes the contents of the file\n");
-    printf("    build <file> - Compiles the file into an executable\n");
-    printf("    help         - Prints this message\n");
+    printf("    run   <file> [--debug] - Executes the contents of the file\n");
+    printf("    build <file>           - Compiles the file into an executable\n");
+    printf("    help                   - Prints this message\n");
 }
 
-long get_file_contents(char* name, char** buffer)
+BF_Code get_code_from_file(char* name)
 {
-    long length;
     FILE* file;
+    BF_Code code = {0, 0, NULL};
 
     file = fopen (name, "r");
     fseek(file, 0, SEEK_END);
-    length = ftell(file);
+    code.length = ftell(file);
 
     fseek(file, 0, SEEK_SET);
-    *buffer = malloc(length);
-    CHECK_OOM(buffer);
+    code.data = malloc(code.length);
+    CHECK_OOM(code.data);
 
-    fread(*buffer, 1, length, file);
+    fread(code.data, 1, code.length, file);
     fclose(file);
 
-    return length;
+    return code;
 }
 
 int main(int argc, char* argv[])
 {
-    void (*command)(char*, long, long);
-    char* program = 0;
-    long length = 0;
+    void (*command)(BF_Code, BF_Options);
+    BF_Options options = (BF_Options){0, 30000};
+    BF_Code code;
 
     if (argc == 2 && strcmp(argv[1], "help") == 0)
     {
         print_help(argv[0]);
         exit(EXIT_SUCCESS);
     }
-    else if (argc == 3 && strcmp(argv[1], "run") == 0)
+    else if (argc >= 3 && strcmp(argv[1], "run") == 0)
     {
         command = bf_run;
+        if (argc == 4 && strcmp(argv[3], "--debug") == 0)
+        {
+            options.debug = 1;
+        }
     }
     else if (argc == 3 && strcmp(argv[1], "build") == 0)
     {
@@ -58,7 +62,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    length = get_file_contents(argv[2], &program);
-    command(program, length, 30000);
-    free(program);
+    code = get_code_from_file(argv[2]);
+    command(code, options);
+    free(code.data);
 }
