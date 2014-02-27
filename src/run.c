@@ -6,21 +6,20 @@
 
 #define DATA_EACH(val) for (;val->index < val->length; val->index++)
 
-typedef struct
+void run_to_loop_end(BF_Code* code, BF_State* state)
 {
-    int index;
-    int length;
-    int* data;
-} BF_State;
+    if (state->skips[code->index])
+    {
+        code->index = state->skips[code->index];
+        return;
+    }
 
-int run_to_loop_end(BF_Code* code)
-{
+    int start = code->index;
     int loops = 1;
 
     do
     {
         code->index++;
-
         switch (DATA_VAL(code))
         {
             case '[':
@@ -32,6 +31,24 @@ int run_to_loop_end(BF_Code* code)
         }
     }
     while (loops > 0);
+
+    state->skips[start] = code->index;
+}
+
+void run_loop(BF_Code* code, BF_State* state, int debug)
+{
+    int start = ++code->index;
+    while(1)
+    {
+        bf_run_code(code, state, debug);
+
+        if (!DATA_VAL(state))
+        {
+            break;
+        }
+
+        code->index = start;
+    }
 }
 
 void strip_comments(BF_Code* code)
@@ -85,7 +102,7 @@ void debug_info(BF_Code code, BF_State state)
     printf("---\n");
 }
 
-void run_code(BF_Code* code, BF_State* state, int debug)
+void bf_run_code(BF_Code* code, BF_State* state, int debug)
 {
     int start;
 
@@ -123,23 +140,13 @@ void run_code(BF_Code* code, BF_State* state, int debug)
                 break;
 
             case '[':
-                if (!DATA_VAL(state))
+                if (DATA_VAL(state))
                 {
-                    run_to_loop_end(code);
-                    break;
+                    run_loop(code, state, debug);
                 }
-
-                start = ++code->index;
-                while(1)
+                else
                 {
-                    run_code(code, state, debug);
-
-                    if (!DATA_VAL(state))
-                    {
-                        break;
-                    }
-
-                    code->index = start;
+                    run_to_loop_end(code, state);
                 }
                 break;
 
@@ -157,16 +164,21 @@ void bf_run(BF_Code code, BF_Options options)
 {
     int* data = calloc(options.data_length, sizeof(int));
     CHECK_OOM(data);
+
+    int* skips = calloc(options.data_length, sizeof(int));
+    CHECK_OOM(skips);
+
     BF_Code* code_copy = malloc(sizeof(BF_Code));
-    CHECK_OOM(run_code);
+    CHECK_OOM(code_copy);
+
     BF_State* state = malloc(sizeof(BF_State));
     CHECK_OOM(state);
 
     memcpy(code_copy, &code, sizeof(BF_Code));
-    *state = (BF_State){0, options.data_length, data};
+    *state = (BF_State){0, options.data_length, data, skips};
 
     strip_comments(code_copy);
-    run_code(code_copy, state, options.debug);
+    bf_run_code(code_copy, state, options.debug);
 
     free(state->data);
     free(code_copy);

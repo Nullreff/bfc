@@ -17,3 +17,11 @@ typedef struct
     long data_length;
 } BF_Options;
 
+typedef struct
+{
+    int index;
+    int length;
+    int* data;
+    int* skips;
+} BF_State;
+
