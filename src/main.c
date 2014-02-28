@@ -19,7 +19,9 @@ BF_Code get_code_from_file(char* name)
     FILE* file;
     BF_Code code = {0, 0, NULL};
 
-    file = fopen (name, "r");
+    file = fopen(name, "r");
+    ERROR_IF(!file, "Error opening file\n")
+
     fseek(file, 0, SEEK_END);
     code.length = ftell(file);
 
