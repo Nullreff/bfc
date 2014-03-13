@@ -4,8 +4,6 @@
 #include "run.h"
 #include "common.h"
 
-#define DATA_EACH(val) for (;val->index < val->length; val->index++)
-
 void run_to_loop_end(BF_Code* code, BF_State* state)
 {
     if (state->skips[code->index])
@@ -107,7 +105,7 @@ void bf_run_code(BF_Code* code, BF_State* state, int debug)
 {
     int start;
 
-    DATA_EACH(code)
+    for (;code->index < code->length; code->index++)
     {
         if (debug)
         {
