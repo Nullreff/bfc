@@ -77,8 +77,9 @@ void strip_comments(BF_Code* code)
         }
     }
 
-    code->data = realloc(code->data, j);
-    CHECK_OOM(code->data);
+    char* temp = realloc(code->data, j);
+    CHECK_OOM(temp);
+    code->data = temp;
     code->length = j;
 }
 
@@ -181,6 +182,8 @@ void bf_run(BF_Code code, BF_Options options)
     bf_run_code(code_copy, state, options.debug);
 
     free(state->data);
-    free(code_copy);
+    free(state->skips);
     free(state);
+    free(code_copy->data);
+    free(code_copy);
 }

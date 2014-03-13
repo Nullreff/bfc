@@ -66,5 +66,4 @@ int main(int argc, char* argv[])
 
     code = get_code_from_file(argv[2]);
     command(code, options);
-    free(code.data);
 }
